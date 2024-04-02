@@ -1,6 +1,8 @@
 type Query{
     postById(id: ID): Post
-    getALlPosts: [Post]
+    authorById(id: ID): Author
+    getAllPosts: [Post]
+    getAllAuthors: [Author]
 }
 
 type Post{
