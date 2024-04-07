@@ -4,7 +4,11 @@ import com.chuwa.chuwa.dao.PostRepository;
 import com.chuwa.chuwa.entity.Post;
 import com.chuwa.chuwa.exception.ResourceNotFoundException;
 import com.chuwa.chuwa.payload.PostDto;
+import com.chuwa.chuwa.payload.PostResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.chuwa.chuwa.service.PostService;
 
@@ -51,6 +55,33 @@ public class PostServiceImpl implements PostService {
         return postRepository.findAll().stream()
               .map(this::mapToDto)
               .collect(Collectors.toList());
+    }
+
+    @Override
+    public PostResponse getAllPosts(int pageNo, int pageSize, String sortBy, String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
+              : Sort.by(sortBy).descending();
+
+        // create pageable instance
+        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, sort);
+        Page<Post> pagePosts = postRepository.findAll(pageRequest);
+
+        // get content for page object
+        List<Post> posts = pagePosts.getContent();
+        List<PostDto> postDtos = posts.stream()
+              .map(this::mapToDto)
+              .collect(Collectors.toList());
+
+        PostResponse postResponse = new PostResponse();
+        postResponse.setContent(postDtos);
+        postResponse.setPageNo(pagePosts.getNumber()); // page number starts from 0, 1, 2...
+        postResponse.setPageSize(pagePosts.getSize());
+        postResponse.setTotalElements(pagePosts.getTotalElements());
+        postResponse.setTotalPages(pagePosts.getTotalPages());
+        postResponse.setLast(pagePosts.isLast());
+
+        return postResponse;
     }
 
     @Override
